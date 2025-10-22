@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Captura de Access Token</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    .token-box { background: #f4f4f4; padding: 10px; border: 1px solid #ccc; }
+  </style>
+</head>
+<body>
+  <h1>Access Token Capturado</h1>
+  <div id="token" class="token-box">Procesando...</div>
+
+  <script>
+    function getTokenFromUrl() {
+      const hash = window.location.hash.substring(1);
+      const params = new URLSearchParams(hash);
+      const token = params.get("access_token");
+      const expires = params.get("expires_in");
+      const type = params.get("token_type");
+
+      if (token) {
+        document.getElementById("token").innerHTML = `
+          <strong>Access Token:</strong> ${token}<br>
+          <strong>Expires In:</strong> ${expires} segundos<br>
+          <strong>Token Type:</strong> ${type}
+        `;
+      } else {
+        document.getElementById("token").innerText = "No se encontró ningún token en la URL.";
+      }
+    }
+
+    window.onload = getTokenFromUrl;
+  </script>
+</body>
+</html>
