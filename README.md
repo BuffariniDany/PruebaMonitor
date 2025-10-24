@@ -11,3 +11,5 @@ el que usa la pagina le envia un token (para la prueba va un token de prueba; si
 la prueba es: https://buffarinidany.github.io/PruebaMonitor/monitor.html#access_token=TEST123&expires_in=86399&token_type=bearer
 
 #caso ok segundo paso: salta el pop-up
+<img width="551" height="382" alt="image" src="https://github.com/user-attachments/assets/3aed2f7e-6fa7-4679-bcce-ca6e27d46749" />
+ahi fuerzo por codigo que siempre permita el acceso al copy and paste
