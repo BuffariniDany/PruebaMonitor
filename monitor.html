@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -6,32 +7,100 @@
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; }
     .token-box { background: #f4f4f4; padding: 10px; border: 1px solid #ccc; }
+    .ok { color: green; }
+    .err { color: red; }
   </style>
 </head>
 <body>
   <h1>Access Token Capturado</h1>
   <div id="token" class="token-box">Procesando...</div>
+  <p id="msg"></p>
+  <button id="copyBtn" style="display:none;">Copiar token</button>
+  <button id="skipBtn" style="display:none;">Omitir y continuar</button>
 
   <script>
-    function getTokenFromUrl() {
-      const hash = window.location.hash.substring(1);
-      const params = new URLSearchParams(hash);
-      const token = params.get("access_token");
-      const expires = params.get("expires_in");
-      const type = params.get("token_type");
+    (function () {
+      const FINAL_URL = 'https://apps.mypurecloud.de/directory/#/activity';
 
-      if (token) {
-        document.getElementById("token").innerHTML = `
-          <strong>Access Token:</strong> ${token}<br>
-          <strong>Expires In:</strong> ${expires} segundos<br>
-          <strong>Token Type:</strong> ${type}
-        `;
-      } else {
-        document.getElementById("token").innerText = "No se encontró ningún token en la URL.";
+      const tokenBox = document.getElementById('token');
+      const msgEl = document.getElementById('msg');
+      const copyBtn = document.getElementById('copyBtn');
+      const skipBtn = document.getElementById('skipBtn');
+
+      function showMessage(text, cls) {
+        msgEl.textContent = text;
+        msgEl.className = cls || '';
       }
-    }
 
-    window.onload = getTokenFromUrl;
+      function normalizeHash(hash) {
+        return (hash || '').replace(/^#/, '').replace(/&amp;/g, '&');
+      }
+
+      function getParams() {
+        const params = new URLSearchParams(normalizeHash(window.location.hash));
+        return {
+          token: params.get('access_token'),
+          expires: params.get('expires_in'),
+          type: params.get('token_type')
+        };
+      }
+
+      async function copyToClipboard(text) {
+        if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(text);
+          return true;
+        }
+        return false;
+      }
+
+      document.addEventListener('DOMContentLoaded', async () => {
+        const { token, expires, type } = getParams();
+
+        if (!token) {
+          tokenBox.textContent = 'No se encontró ningún token en la URL.';
+          showMessage('Error: no se detectó access_token en el fragmento (#).', 'err');
+          return;
+        }
+
+        tokenBox.innerHTML = `
+          <strong>Access Token:</strong> ${token}<br>
+          <strong>Expires In:</strong> ${expires || 'N/D'} segundos<br>
+          <strong>Token Type:</strong> ${type || 'N/D'}
+        `;
+
+        showMessage('Access token detectado. Intentando copiar...', '');
+
+        try {
+          const copied = await copyToClipboard(token);
+          if (copied) {
+            showMessage('Token copiado al portapapeles ✅ Redirigiendo...', 'ok');
+            setTimeout(() => { window.location.href = FINAL_URL; }, 800);
+          } else {
+            showMessage('No se pudo copiar automáticamente. Usa el botón para copiar.', 'err');
+            copyBtn.style.display = skipBtn.style.display = 'inline-block';
+          }
+        } catch (e) {
+          console.warn('Error al copiar:', e);
+          showMessage('No se pudo copiar automáticamente. Usa el botón para copiar.', 'err');
+          copyBtn.style.display = skipBtn.style.display = 'inline-block';
+        }
+
+        copyBtn.addEventListener('click', async () => {
+          const ok = await copyToClipboard(token);
+          if (ok) {
+            showMessage('Token copiado ✅ Redirigiendo...', 'ok');
+            setTimeout(() => { window.location.href = FINAL_URL; }, 500);
+          } else {
+            alert('No se pudo copiar automáticamente. Copia manualmente el token.');
+          }
+        });
+
+        skipBtn.addEventListener('click', () => {
+          showMessage('Redirigiendo sin copiar token...', 'ok');
+          setTimeout(() => { window.location.href = FINAL_URL; }, 500);
+        });
+      });
+    })();
   </script>
 </body>
 </html>
